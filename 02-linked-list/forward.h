@@ -75,19 +75,48 @@ private:
     }
     
     T& insert(const T& value, size_t position) override {
-
+        if (position > nodes) throw std::out_of_range("Insert position out of bounds");
+        ++nodes;
+        if (position == 0) {
+            head = new Node(value, head);
+            return head->data;
+        }
+        Node* temp = head;
+        for (size_t i = 0; i < position - 1; i++) {
+            temp = temp->next;
+        }
+        temp->next = new Node(value, temp->next);
+        return temp->next->data;
     }
     
     bool remove(size_t position) override {
-
+        if (position >= nodes) { return false; }
+        --nodes;
+        Node* temp = head;
+        if (position == 0) {
+            head = head->next;
+            delete temp;
+            return true;
+        }
+        for (size_t i = 0; i < position - 1; i++) {
+            temp = temp->next;
+        }
+        Node* toDelete = temp->next;
+        temp->next = toDelete->next;
+        delete toDelete;
+        return true;
     }
     
     T& operator[](size_t position) override {
-
+        Node* temp = head;
+        for (size_t i = 0; i < position; i++) {
+            temp = temp->next;
+        }
+        return temp->data;
     }
     
     [[nodiscard]] bool is_empty() const override {
-        return head == nullptr;
+        return nodes == 0;
     }
     
     [[nodiscard]] size_t size() const override {
@@ -95,7 +124,11 @@ private:
     }
     
     void clear() override {
-
+        while (head != nullptr) {
+            Node* temp = head;
+            head = head->next;
+            delete temp;
+        }
     }
     
     void sort() override {
@@ -103,11 +136,25 @@ private:
     }
     
     [[nodiscard]] bool is_sorted() const override {
-
+        Node* temp;
+        for (size_t i = 0; i < nodes - 1; i++) {
+            if (temp->data > temp->next->data) return false;
+            temp = temp->next;
+        }
+        return true;
     }
     
     void reverse() override {
+        Node* prev = nullptr;
+        Node* current = head;
+        Node* next;
 
+        while (current != nullptr) {
+            next = current->next;
+            current->next = prev;
+            prev = current;
+            current = next;
+        }
     }
     
     [[nodiscard]] std::string name() const override {
