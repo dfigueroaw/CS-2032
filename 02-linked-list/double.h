@@ -1,26 +1,28 @@
-#ifndef FORWARD_H
-#define FORWARD_H
+#ifndef DOUBLE_H
+#define DOUBLE_H_H
 
 #include "list.h"
 #include <cstddef>
 #include <stdexcept>
 
 template<typename T>
-class ForwardList : public List<T> {
+class DoubleList : public List<T> {
 private:
     struct Node {
         T data;
+        Node* prev = nullptr;
         Node* next = nullptr;
 
         Node() = default;
         Node(const T& data): data(data) {}
-        Node(const T& data, Node* next): data(data), next(next) {}
+        Node(const T& data, Node* prev, Node* next): data(data), prev(prev), next(next) {}
     };
 
     Node* head = nullptr;
+    Node* tail = nullptr;
     size_t nodes = 0;
 
-    ForwardList() = default;
+    DoubleList() = default;
 
     T& front() override {
         if (head == nullptr) throw std::runtime_error("List is empty");
@@ -28,50 +30,36 @@ private:
     }
 
     T& back() override {
-        if (head == nullptr) throw std::runtime_error("List is empty");
-        Node* temp = head;
-        while (temp->next != nullptr) {
-            temp = temp->next;
-        }
-        return temp;
+        if (tail == nullptr) throw std::runtime_error("List is empty");
+        return tail->data;
     }
 
     void push_front(const T& value) override {
-        head = new Node(value, head);
+        head = new Node(value, nullptr, head);
+        head->next->prev = head;
         ++nodes;
     }
     
     void push_back(const T& value) override {
-        if (head == nullptr) {
-            head = new Node(value);
-        } else {
-            Node* temp = head;
-            while (temp->next != nullptr) {
-                temp = temp->next;
-            }
-            temp->next = new Node(value);
-        }
+        tail = new Node(value, tail, nullptr);
+        tail->prev->next = tail;
         ++nodes;
     }
 
     T pop_front() override {
         if (head == nullptr) throw std::runtime_error("List is empty");
         T data = head->data;
-        Node* temp = head->next;
-        delete head;
-        head = temp;
+        head = head->next;
+        delete head->prev;
         --nodes;
         return data;
     }
 
     T pop_back() override {
-        if (head == nullptr) throw std::runtime_error("List is empty");
-        Node* temp = head;
-        while (temp->next != nullptr) {
-            temp = temp->next;
-        }
-        T data = temp->data;
-        delete temp;
+        if (tail == nullptr) throw std::runtime_error("List is empty");
+        T data = tail->data;
+        tail = tail->prev;
+        delete tail->next;
         --nodes;
         return data;
     }
@@ -89,7 +77,7 @@ private:
         }
         temp->next = new Node(value, temp->next);
         return temp->next->data;
-    }
+    } // TODO
     
     bool remove(size_t position) override {
         if (position >= nodes) { return false; }
@@ -107,7 +95,7 @@ private:
         temp->next = toDelete->next;
         delete toDelete;
         return true;
-    }
+    } // TODO
     
     T& operator[](size_t position) override {
         Node* temp = head;
@@ -115,7 +103,7 @@ private:
             temp = temp->next;
         }
         return temp->data;
-    }
+    } // TODO: THROW
     
     [[nodiscard]] bool is_empty() const override {
         return nodes == 0;
@@ -159,16 +147,11 @@ private:
         }
 
         head = prev;
-    }
+    } // TODO
     
     [[nodiscard]] std::string name() const override {
-        return "Forward List";
-    }
-
-    ~ForwardList() {
-        clear();
+        return "Double List";
     }
 };
 
 #endif
-
