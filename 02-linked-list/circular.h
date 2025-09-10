@@ -1,12 +1,12 @@
-#ifndef DOUBLE_H
-#define DOUBLE_H
+#ifndef CIRCULAR_H
+#define CIRCULAR_H
 
 #include "list.h"
 #include <cstddef>
 #include <stdexcept>
 
 template<typename T>
-class DoubleList : public List<T> {
+class CircularList : public List<T> {
 private:
     struct Node {
         T data;
@@ -18,48 +18,50 @@ private:
         Node(const T& data, Node* prev, Node* next): data(data), prev(prev), next(next) {}
     };
 
-    Node* head = nullptr;
-    Node* tail = nullptr;
+    Node* head;
     size_t nodes = 0;
 
-    DoubleList() = default;
+public:
+    CircularList(): head(new Node(static_cast<T>(0), head, head) {}
 
     T& front() override {
-        if (head == nullptr) throw std::runtime_error("List is empty");
-        return head->data;
+        if (head->next == head) throw std::runtime_error("List is empty");
+        return head->next->data;
     }
 
     T& back() override {
-        if (tail == nullptr) throw std::runtime_error("List is empty");
-        return tail->data;
+        if (head->prev == head) throw std::runtime_error("List is empty");
+        return head->prev->data;
     }
 
     void push_front(const T& value) override {
-        head = new Node(value, nullptr, head);
-        head->next->prev = head;
+        head->next = new Node(value, head, head->next);
+        head->next->next->prev = head->next;
         ++nodes;
     }
     
     void push_back(const T& value) override {
-        tail = new Node(value, tail, nullptr);
-        tail->prev->next = tail;
+        head->prev = new Node(value, head->prev, head);
+        head->prev->prev->next = head->prev;
         ++nodes;
     }
 
     T pop_front() override {
-        if (head == nullptr) throw std::runtime_error("List is empty");
-        T data = head->data;
-        head = head->next;
-        delete head->prev;
+        if (head->next == head) throw std::runtime_error("List is empty");
+        T data = head->next->data;
+        head->next = head->next->next;
+        delete head->next->prev;
+        head->next->prev = head;
         --nodes;
         return data;
     }
 
     T pop_back() override {
-        if (tail == nullptr) throw std::runtime_error("List is empty");
-        T data = tail->data;
-        tail = tail->prev;
-        delete tail->next;
+        if (head->prev == head) throw std::runtime_error("List is empty");
+        T data = head->prev->data;
+        head->prev = head->prev->prev;
+        delete head->prev->next;
+        head->prev->next = head;
         --nodes;
         return data;
     }
@@ -67,43 +69,36 @@ private:
     T& insert(const T& value, size_t position) override {
         if (position > nodes) throw std::out_of_range("Insert position out of bounds");
         ++nodes;
-        if (position == 0) {
-            head = new Node(value, head);
-            return head->data;
-        }
         Node* temp = head;
-        for (size_t i = 0; i < position - 1; i++) {
+        for (size_t i = 0; i < position; i++) {
             temp = temp->next;
         }
-        temp->next = new Node(value, temp->next);
+        temp->next = new Node(value, temp, temp->next);
+        temp->next->next->prev = temp->next;
         return temp->next->data;
-    } // TODO
+    }
     
     bool remove(size_t position) override {
         if (position >= nodes) { return false; }
         --nodes;
         Node* temp = head;
-        if (position == 0) {
-            head = head->next;
-            delete temp;
-            return true;
-        }
-        for (size_t i = 0; i < position - 1; i++) {
+        for (size_t i = 0; i <= position; i++) {
             temp = temp->next;
         }
-        Node* toDelete = temp->next;
-        temp->next = toDelete->next;
-        delete toDelete;
+        temp->prev->next = temp->next;
+        temp->next->prev = temp->prev;
+        delete temp;
         return true;
-    } // TODO
+    }
     
     T& operator[](size_t position) override {
+        if (position >= nodes) { throw std::out_of_range("Index out of bounds"); }
         Node* temp = head;
-        for (size_t i = 0; i < position; i++) {
+        for (size_t i = 0; i <= position; i++) {
             temp = temp->next;
         }
         return temp->data;
-    } // TODO: THROW
+    }
     
     [[nodiscard]] bool is_empty() const override {
         return nodes == 0;
@@ -114,9 +109,9 @@ private:
     }
     
     void clear() override {
-        while (head != nullptr) {
-            Node* temp = head;
-            head = head->next;
+        while (head->next != head) {
+            Node* temp = head->next;
+            head->next = head->next->next;
             delete temp;
         }
     }
@@ -126,8 +121,8 @@ private:
     }
     
     [[nodiscard]] bool is_sorted() const override {
-        Node* temp;
-        for (size_t i = 0; i < nodes - 1; i++) {
+        Node* temp->next;
+        for (size_t i = 0; i < nodes; i++) {
             if (temp->data > temp->next->data) return false;
             temp = temp->next;
         }
@@ -135,22 +130,21 @@ private:
     }
     
     void reverse() override {
-        Node* prev = nullptr;
-        Node* current = head;
-        Node* next;
-
-        while (current != nullptr) {
-            next = current->next;
-            current->next = prev;
-            prev = current;
-            current = next;
+        Node* temp = head;
+        for (size_t i = 0; i <= nodes; i++) {
+            Node* tempNext = temp->next;
+            temp->next = temp->prev;
+            temp->prev = tempNext;
+            temp = temp->prev;
         }
-
-        head = prev;
-    } // TODO
+    }
     
     [[nodiscard]] std::string name() const override {
         return "Double List";
+    }
+
+    ~CircularList() {
+        clear();
     }
 };
 
