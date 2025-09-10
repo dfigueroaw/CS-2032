@@ -14,15 +14,15 @@ private:
         Node* next = nullptr;
 
         Node() = default;
-        Node(const T& data): data(data) {}
-        Node(const T& data, Node* prev, Node* next): data(data), prev(prev), next(next) {}
+        explicit Node(const T& value): data(value) {}
+        Node(const T& value, Node* prev, Node* next): data(value), prev(prev), next(next) {}
     };
 
     Node* head;
     size_t nodes = 0;
 
 public:
-    CircularList(): head(new Node()) {
+    CircularList(): List<T>(), head(new Node()) {
         head->next = head;
         head->prev = head;
     }
@@ -83,13 +83,13 @@ public:
     
     bool remove(size_t position) override {
         if (position >= nodes) { return false; }
-        --nodes;
         Node* temp = head;
         for (size_t i = 0; i <= position; i++) {
             temp = temp->next;
         }
         temp->prev->next = temp->next;
         temp->next->prev = temp->prev;
+        --nodes;
         delete temp;
         return true;
     }
@@ -113,7 +113,10 @@ public:
     
     void clear() override {
         while (!is_empty()) {
-            pop_front();
+            head->next = head->next->next;
+            delete head->next->prev;
+            head->next->prev = head;
+            --nodes;
         }
     }
     
