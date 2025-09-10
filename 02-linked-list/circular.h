@@ -22,15 +22,18 @@ private:
     size_t nodes = 0;
 
 public:
-    CircularList(): head(new Node(static_cast<T>(0), head, head) {}
+    CircularList(): head(new Node()) {
+        head->next = head;
+        head->prev = head;
+    }
 
     T& front() override {
-        if (head->next == head) throw std::runtime_error("List is empty");
+        if (is_empty()) throw std::runtime_error("List is empty");
         return head->next->data;
     }
 
     T& back() override {
-        if (head->prev == head) throw std::runtime_error("List is empty");
+        if (is_empty()) throw std::runtime_error("List is empty");
         return head->prev->data;
     }
 
@@ -47,7 +50,7 @@ public:
     }
 
     T pop_front() override {
-        if (head->next == head) throw std::runtime_error("List is empty");
+        if (is_empty()) throw std::runtime_error("List is empty");
         T data = head->next->data;
         head->next = head->next->next;
         delete head->next->prev;
@@ -93,8 +96,8 @@ public:
     
     T& operator[](size_t position) override {
         if (position >= nodes) { throw std::out_of_range("Index out of bounds"); }
-        Node* temp = head;
-        for (size_t i = 0; i <= position; i++) {
+        Node* temp = head->next;
+        for (size_t i = 0; i < position; i++) {
             temp = temp->next;
         }
         return temp->data;
@@ -109,10 +112,8 @@ public:
     }
     
     void clear() override {
-        while (head->next != head) {
-            Node* temp = head->next;
-            head->next = head->next->next;
-            delete temp;
+        while (!is_empty()) {
+            pop_front();
         }
     }
     
@@ -121,8 +122,9 @@ public:
     }
     
     [[nodiscard]] bool is_sorted() const override {
-        Node* temp->next;
-        for (size_t i = 0; i < nodes; i++) {
+        if (nodes <= 1) { return true; }
+        Node* temp = head->next;
+        for (size_t i = 0; i < nodes - 1; i++) {
             if (temp->data > temp->next->data) return false;
             temp = temp->next;
         }
@@ -140,11 +142,12 @@ public:
     }
     
     [[nodiscard]] std::string name() const override {
-        return "Double List";
+        return "Circular List";
     }
 
     ~CircularList() {
         clear();
+        delete head;
     }
 };
 
